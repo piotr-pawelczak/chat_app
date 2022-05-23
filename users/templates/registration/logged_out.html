@@ -1,0 +1,9 @@
+{% extends "chat/base.html" %}
+
+{% block title %}Logged out{% endblock %}
+
+{% block content %}
+    <h1 class="mt-3">Logged out</h1>
+    <p>You have been successfully logged out.</p>
+    <a href="{% url "users:login" %}" style="text-decoration:none;">Log in again</a>
+{% endblock %}
