@@ -1,0 +1,14 @@
+{% extends "chat/base.html" %}
+{% load crispy_forms_filters %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+        <h1 class="mt-3">Register in chat app</h1>
+
+        <form action="" method="post" class="register-form form-group border border-secondary rounded p-4 mx-auto mt-3" style="max-width: 600px">
+            {% csrf_token %}
+            {{ user_form|crispy }}
+            <input type="submit" value="Register" class="btn btn-success mt-2">
+        </form>
+{% endblock %}

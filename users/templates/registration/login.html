@@ -10,13 +10,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {% endif %}
-        <p class="mt-4">To get access to page, you need to login</p>
         <form action="" method="post" class="form-group border border-secondary rounded p-4 mx-auto" style="max-width: 600px">
             {% csrf_token %}
 
-            {{ form|crispy }}
-
-            <input type="hidden" name="next" value="{{ next }}" />
+            {{ form.username|as_crispy_field }}
+            {{ form.password|as_crispy_field }}
             <input type="submit" value="Zaloguj" class="btn btn-success mt-2">
         </form>
+
+        <p>Don't have an account?</p>
+        <a class="btn btn-warning" href="{% url "users:register" %}">Register now</a>
 {% endblock %}
