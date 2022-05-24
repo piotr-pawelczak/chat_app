@@ -22,7 +22,13 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
+            var dateOptions = {hour: 'numeric', minute: 'numeric', hour12: true};
+            var datetime = new Date(data.datetime).toLocaleString('en', dateOptions);
+            var isMe = data.user === '{{ request.user }}';
+            {#var source = isMe ? 'me' : 'other';#}
+            var name = isMe ? 'Me' : data.user;
+
+            document.querySelector('#chat-log').value += (name + ': ' + data.message + ' ' + datetime + '\n');
         };
 
         chatSocket.onclose = function(e) {
