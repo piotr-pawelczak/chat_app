@@ -50,6 +50,19 @@
     </div>
 </nav>
 
+{% if messages %}
+        <ul class="messages list-unstyled position-fixed col-12" id="msg" style="z-index: 1;">
+            {% for message in messages %}
+                <li class="message">
+                    <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
 <div class="container fluid">
     {% block content %}{% endblock %}
 </div>
