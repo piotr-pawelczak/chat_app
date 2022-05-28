@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from users.models import Profile
 
 
 class UserRegisterForm(UserCreationForm):
@@ -22,3 +23,10 @@ class UserRegisterForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('There is registered user with given e-mail')
         return self.cleaned_data['email']
+
+
+class ProfileForm(forms.ModelForm):
+
+    class Meta:
+        model = Profile
+        fields = ("city",)

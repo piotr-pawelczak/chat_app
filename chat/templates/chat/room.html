@@ -3,54 +3,145 @@
 {% block title %}Chat room{% endblock %}
 
 {% block content %}
-    {#    <div id="chat-log"></div><br>#}
-    {#    <input id="chat-message-input" type="text" size="100"><br>#}
-    {#    <input id="chat-message-submit" type="button" value="Send">#}
     {{ room_name|json_script:"room-name" }}
 
-    <div class="row d-flex justify-content-center mt-3">
-        <div class="col-md-10 col-lg-8 col-xl-6">
+    <div class="row mt-3">
+        <!-- USERS -->
+        <div class="col-lg-4" id="accordion">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center p-3" style="border-bottom: none;">
+                    <a class="btn p-0" data-bs-toggle="collapse" href="#collapseUsers">
+                        <h5 class="mb-0">Users</h5>
+                    </a>
+                </div>
+            </div>
+            <!-- USERS LIST -->
 
-            <div class="card" id="chat2">
+            <div id="collapseUsers" class="collapse show" data-bs-parent="#accordion">
+                <ul class="list-group list-group-flush list-unstyled mb-0" id="user-ul">
+                  {% for user in users %}
+                      <li class="p-2 border-bottom mb-0 user-li">
+                      <a href="{% url 'chat:room' username=user.username %}" class="d-flex justify-content-between user-list-link">
+                          <div class="d-flex flex-row">
+                            <div class="user-list-image">
+                              <img
+                                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
+                                alt="avatar" class="d-flex align-self-center me-3" width="60">
+
+                                {% if user.profile.is_online %}
+                                  <span class="online-status badge bg-success badge-dot p-2 border border-light rounded-circle">
+                                      <span class="visually-hidden">Status</span>
+                                  </span>
+                                {% else %}
+                                  <span class="online-status badge bg-danger badge-dot p-2 border border-light rounded-circle">
+                                      <span class="visually-hidden">Status</span>
+                                  </span>
+                                {% endif %}
+                            </div>
+                            <div class="pt-1 user-list-info">
+                              <p class="fw-bold mb-0">{{ user.username }}</p>
+                              <p class="small text-muted mb-0">No messages</p>
+                            </div>
+                          </div>
+                        </a>
+                      </li>
+                  {% endfor %}
+              </ul>
+            </div>
+        </div>
+            <!-- END USERS LIST -->
+        <!-- END USERS -->
+
+        <!-- CHAT -->
+        <div class="col-lg-8">
+            <div class="card mt-3" id="chat2">
                 <div class="card-header d-flex justify-content-between align-items-center p-3">
-                    <h5 class="mb-0">{{ room_name }}</h5>
+                    <h5 class="mb-0">{{ receiver_user.username }}</h5>
                 </div>
                 <div id="chat-log" class="card-body" data-mdb-perfect-scrollbar="true"
                      style="position: relative; height: 400px">
+                    <!-- PLACE FOR MESSAGES -->
+                    {% for message in chat_messages %}
+                        {% if message.sender == request.user.username %}
+                            <div class="d-flex flex-row justify-content-end">
+                                <div>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-primary text-white" style="margin-right: 10px; margin-top: 5px;">{{ message }}</p>
+                                    <p class="small rounded-3 text-muted ms-3 mb-1" style="float: right; margin-right: 10px;">{{ message.timestamp|time:'H:i' }}</p>
+                                </div>
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
+                      alt="avatar 1" style="width: 45px; height: 100%;">
+                            </div>
+                        {% else %}
+                            <div class="d-flex flex-row justify-content-start">
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
+                                 alt="avatar 1" style="width: 45px; height: 100%;">
+                                <div>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7; margin-top: 5px;">{{ message }}</p>
+                                    <p class="small ms-3 mb-3 rounded-3 text-muted">{{ message.timestamp|time:'H:i' }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
                 <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
-                    <input id="chat-message-input" type="text" size="100" class="form-control form-control-lg"
-                           placeholder="Type message"><br>
-                    <input id="chat-message-submit" type="button" value="Send" class="btn btn-success">
+                    <div class="mx-3">
+                        <input id="chat-message-input" type="text" size="100" class="form-control form-control-lg" placeholder="Type message">
+                    </div>
+                    <div class="ml-3">
+                        <input id="chat-message-submit" type="button" value="Send" class="btn btn-success">
+                    </div>
+
                 </div>
             </div>
-
         </div>
+        <!-- END CHAT -->
     </div>
+
+
+    {{ receiver_user.id|json_script:"json-username" }}
+    {{ request.user.username|json_script:"json-message-username" }}
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
     <script>
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
-        const url = 'ws://' + window.location.host + '/ws/chat/' + roomName + '/';
+        window.onload = function() {
+            const $chat = $("#chat-log");
+            $chat.scrollTop($chat[0].scrollHeight);
+        }
+    </script>
+
+    <script>
+        const receiverId = JSON.parse(document.getElementById('json-username').textContent);
+        const url = 'ws://' + window.location.host + '/ws/' + receiverId + '/';
         const chatSocket = new WebSocket(url);
 
         chatSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-            const dateOptions = {hour: 'numeric', minute: 'numeric', hour12: true};
-            const datetime = new Date(data.datetime).toLocaleString('en', dateOptions);
+            const dateOptions = {hour: 'numeric', minute: 'numeric', hour12: false};
+            const datetime = new Date(data.datetime).toLocaleString('pl', dateOptions);
             const isMe = data.user === '{{ request.user }}';
             const name = isMe ? 'Me' : data.user;
             const message = data.message;
 
             const $chat = $('#chat-log');
-            $chat.append(
-                "<div class=\"d-flex flex-row justify-content-start\">" +
-                "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + name + "</p>" +
-                "<div><p class=\"small p-2 ms-3 mb-1 rounded-3\" style=\"background-color: #f5f6f7;\">" + message + "</p>" +
-                "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + datetime + "</p>" + "</div></div>"
-            );
+
+            if (isMe === true) {
+                $chat.append(
+                    "<div class=\"d-flex flex-row justify-content-end\">" +
+                    "<div><p class=\"small p-2 ms-3 mb-1 rounded-3 bg-primary text-white\" style=\"margin-right: 10px; margin-top: 5px;\">" + message + "</p>" +
+                    "<p class=\"small ms-3 mb-3 rounded-3 text-muted\" style=\"float: right; margin-right: 10px;\">" + datetime + "</p>" + "</div>" +
+                    "<img src=\"https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp\"" +
+                    "alt=\"avatar 1\" style=\"width: 45px; height: 100%;\">" + "</div>"
+                );
+            } else {
+                $chat.append(
+                    "<div class=\"d-flex flex-row justify-content-start\">" +
+                    "<img src=\"https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp\"" +
+                    "<div><p class=\"small p-2 ms-3 mb-1 rounded-3\" style=\"background-color: #f5f6f7; margin-top: 5px;\">" + message + "</p>" +
+                    "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + datetime + "</p>" + "</div></div>");
+            }
+
             $chat.scrollTop($chat[0].scrollHeight);
         };
 

@@ -34,16 +34,16 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'users',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
     'crispy_forms',
     'chat',
-    'users',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Warsaw'
 
 USE_I18N = True
 
@@ -144,9 +144,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-LOGIN_REDIRECT_URL = 'chat:index'
+# LOGIN_REDIRECT_URL = 'chat:index'
 LOGIN_URL = 'users:login'
 LOGOUT_URL = 'users:logout'
+LOGIN_REDIRECT_URL = 'chat:index'
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-info',

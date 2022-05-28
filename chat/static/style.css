@@ -1,0 +1,29 @@
+#chat-log {
+    overflow-y: scroll;
+}
+
+.user-list-image {
+    position: relative;
+    height: 70px;
+}
+
+.online-status {
+    position: relative;
+    bottom: 20px;
+    left: 0;
+}
+
+.user-list-link {
+    text-decoration: none;
+}
+
+.user-li:hover {
+    background-color: gainsboro;
+}
+
+#user-ul {
+    height: 400px;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, .125);
+    overflow-y: scroll;
+}

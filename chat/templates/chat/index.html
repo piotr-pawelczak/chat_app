@@ -1,25 +1,133 @@
 {% extends "chat/base.html" %}
 
-{% block title %}Home page{% endblock %}
+{% block title %}Chat room{% endblock %}
 
 {% block content %}
-    <h3 class="mt-3">What chat room would you like to enter?</h3><br>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter" class="btn btn-success mt-3">
+
+    <div class="row mt-3">
+        <!-- USERS -->
+        <div class="col-lg-3" id="accordion">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center p-3" style="border-bottom: none;">
+                    <a class="btn p-0" data-bs-toggle="collapse" href="#collapseUsers">
+                        <h5 class="mb-0">Users</h5>
+                    </a>
+                </div>
+            </div>
+            <!-- USERS LIST -->
+
+            <div id="collapseUsers" class="collapse show" data-bs-parent="#accordion">
+                <ul class="list-group list-group-flush list-unstyled mb-0" id="user-ul">
+                  {% for user in users %}
+                      <li class="p-2 border-bottom mb-0 user-li">
+                      <a href="{% url 'chat:room' username=user.username %}" class="d-flex justify-content-between user-list-link">
+                          <div class="d-flex flex-row">
+                            <div class="user-list-image">
+                              <img
+                                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
+                                alt="avatar" class="d-flex align-self-center me-3" width="60">
+
+                                {% if user.profile.is_online %}
+                                  <span class="online-status badge bg-success badge-dot p-2 border border-light rounded-circle">
+                                      <span class="visually-hidden">Status</span>
+                                  </span>
+                                {% else %}
+                                  <span class="online-status badge bg-danger badge-dot p-2 border border-light rounded-circle">
+                                      <span class="visually-hidden">Status</span>
+                                  </span>
+                                {% endif %}
+                            </div>
+                            <div class="pt-1 user-list-info">
+                              <p class="fw-bold mb-0">{{ user.username }}</p>
+                              <p class="small text-muted mb-0">No messages</p>
+                            </div>
+                          </div>
+                        </a>
+                      </li>
+                  {% endfor %}
+              </ul>
+            </div>
+        </div>
+            <!-- END USERS LIST -->
+        <!-- END USERS -->
+
+        <!-- CHAT -->
+        <div class="col-lg-9">
+            <div class="card mt-3" id="chat2">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h5 class="mb-0">Chat</h5>
+                </div>
+                <div id="chat-log" class="card-body" data-mdb-perfect-scrollbar="true"
+                     style="position: relative; height: 400px">
+                    <p>Select user to start chat</p>
+                </div>
+                <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+                    <div class="mx-3">
+                        <input id="chat-message-input" type="text" size="100" class="form-control form-control-lg" placeholder="Type message">
+                    </div>
+                    <div class="ml-3">
+                        <input id="chat-message-submit" type="button" value="Send" class="btn btn-success disabled">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END CHAT -->
+    </div>
 {% endblock %}
 
 {% block scripts %}
+
     <script>
-        document.querySelector('#room-name-input').focus();
-        document.querySelector('#room-name-input').onkeyup = function(e) {
+        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        const url = 'ws://' + window.location.host + '/ws/chat/' + roomName + '/';
+        const chatSocket = new WebSocket(url);
+
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            const dateOptions = {hour: 'numeric', minute: 'numeric', hour12: true};
+            const datetime = new Date(data.datetime).toLocaleString('en', dateOptions);
+            const isMe = data.user === '{{ request.user }}';
+            const name = isMe ? 'Me' : data.user;
+            const message = data.message;
+
+            const $chat = $('#chat-log');
+
+            if (isMe === true) {
+                $chat.append(
+                    "<div class=\"d-flex flex-row justify-content-start\">" +
+                    "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + name + "</p>" +
+                    "<div><p class=\"small p-2 ms-3 mb-1 rounded-3\" style=\"background-color: #f5f6f7;\">" + message + "</p>" +
+                    "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + datetime + "</p>" + "</div></div>"
+                );
+            } else {
+                $chat.append(
+                    "<div class=\"d-flex flex-row justify-content-end\">" +
+                    "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + name + "</p>" +
+                    "<div><p class=\"small p-2 ms-3 mb-1 rounded-3 bg-primary text-white\" style=\"background-color: #f5f6f7;\">" + message + "</p>" +
+                    "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + datetime + "</p>" + "</div></div>");
+            }
+
+            $chat.scrollTop($chat[0].scrollHeight);
+        };
+
+        chatSocket.onclose = function (e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function (e) {
             if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#room-name-submit').click();
+                document.querySelector('#chat-message-submit').click();
             }
         };
 
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/chat/' + roomName + '/';
+        document.querySelector('#chat-message-submit').onclick = function (e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInputDom.value = '';
         };
     </script>
 {% endblock %}
