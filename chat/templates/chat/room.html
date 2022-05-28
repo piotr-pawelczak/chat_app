@@ -1,6 +1,7 @@
 {% extends "chat/base.html" %}
 
 {% block title %}Chat room{% endblock %}
+{% load static %}
 
 {% block content %}
     {{ room_name|json_script:"room-name" }}
@@ -25,8 +26,8 @@
                           <div class="d-flex flex-row">
                             <div class="user-list-image">
                               <img
-                                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
-                                alt="avatar" class="d-flex align-self-center me-3" width="60">
+                                src="{{ user.profile.profile_image.url }}"
+                                alt="avatar" class="d-flex align-self-center me-3" width="60" style="border-radius: 50%;">
 
                                 {% if user.profile.is_online %}
                                   <span class="online-status badge bg-success badge-dot p-2 border border-light rounded-circle">
@@ -55,8 +56,18 @@
         <!-- CHAT -->
         <div class="col-lg-8">
             <div class="card mt-3" id="chat2">
-                <div class="card-header d-flex justify-content-between align-items-center p-3">
-                    <h5 class="mb-0">{{ receiver_user.username }}</h5>
+                <div class="card-header d-flex align-items-center p-3">
+                    <img src="{{ receiver_user.profile.profile_image.url }}" alt="avatar" class="d-flex" width="45" style="border-radius: 50%;">
+                    <h5 class="mb-0" style="margin-left: 20px;">{{ receiver_user.username }}</h5>
+                    {% if receiver_user.profile.is_online %}
+                        <span class="badge bg-success badge-dot p-2 border border-light rounded-circle" style="margin-left: 10px;">
+                            <span class="visually-hidden">Status</span>
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger badge-dot p-2 border border-light rounded-circle" style="margin-left: 10px;">
+                            <span class="visually-hidden">Status</span>
+                        </span>
+                    {% endif %}
                 </div>
                 <div id="chat-log" class="card-body" data-mdb-perfect-scrollbar="true"
                      style="position: relative; height: 400px">
@@ -68,13 +79,11 @@
                                     <p class="small p-2 ms-3 mb-1 rounded-3 bg-primary text-white" style="margin-right: 10px; margin-top: 5px;">{{ message }}</p>
                                     <p class="small rounded-3 text-muted ms-3 mb-1" style="float: right; margin-right: 10px;">{{ message.timestamp|time:'H:i' }}</p>
                                 </div>
-                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
-                      alt="avatar 1" style="width: 45px; height: 100%;">
+                            <img src="{{ request.user.profile.profile_image.url }}" alt="avatar 1" style="width: 45px; height: 100%; border-radius: 50%;">
                             </div>
                         {% else %}
                             <div class="d-flex flex-row justify-content-start">
-                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
-                                 alt="avatar 1" style="width: 45px; height: 100%;">
+                            <img src="{{ receiver_user.profile.profile_image.url }}" alt="avatar 1" style="width: 45px; height: 100%; border-radius: 50%;">
                                 <div>
                                     <p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7; margin-top: 5px;">{{ message }}</p>
                                     <p class="small ms-3 mb-3 rounded-3 text-muted">{{ message.timestamp|time:'H:i' }}</p>
@@ -100,6 +109,8 @@
 
     {{ receiver_user.id|json_script:"json-username" }}
     {{ request.user.username|json_script:"json-message-username" }}
+    {{ request.user.profile.profile_image.url|json_script:"json-user-image" }}
+    {{ receiver_user.profile.profile_image.url|json_script:"json-receiver-image" }}
 {% endblock %}
 
 {% block scripts %}
@@ -123,6 +134,8 @@
             const isMe = data.user === '{{ request.user }}';
             const name = isMe ? 'Me' : data.user;
             const message = data.message;
+            const userImage = '{{ request.user.profile.profile_image.url }}';
+            const receiverImage = '{{ receiver_user.profile.profile_image.url }}';
 
             const $chat = $('#chat-log');
 
@@ -131,13 +144,13 @@
                     "<div class=\"d-flex flex-row justify-content-end\">" +
                     "<div><p class=\"small p-2 ms-3 mb-1 rounded-3 bg-primary text-white\" style=\"margin-right: 10px; margin-top: 5px;\">" + message + "</p>" +
                     "<p class=\"small ms-3 mb-3 rounded-3 text-muted\" style=\"float: right; margin-right: 10px;\">" + datetime + "</p>" + "</div>" +
-                    "<img src=\"https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp\"" +
-                    "alt=\"avatar 1\" style=\"width: 45px; height: 100%;\">" + "</div>"
+                    "<img src=\"" + userImage + "\"" + "alt=\"avatar 1\" style=\"width: 45px; height: 100%;  border-radius: 50%;\">" +
+                    "</div>"
                 );
             } else {
                 $chat.append(
                     "<div class=\"d-flex flex-row justify-content-start\">" +
-                    "<img src=\"https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp\"" +
+                    "<img src=\"" + receiverImage + "\"" + "alt=\"avatar 1\" style=\"width: 45px; height: 100%; border-radius: 50%;\">" +
                     "<div><p class=\"small p-2 ms-3 mb-1 rounded-3\" style=\"background-color: #f5f6f7; margin-top: 5px;\">" + message + "</p>" +
                     "<p class=\"small ms-3 mb-3 rounded-3 text-muted\">" + datetime + "</p>" + "</div></div>");
             }

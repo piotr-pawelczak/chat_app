@@ -29,4 +29,4 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ("city",)
+        fields = ["city", "profile_image"]

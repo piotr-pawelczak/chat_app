@@ -24,8 +24,8 @@
                           <div class="d-flex flex-row">
                             <div class="user-list-image">
                               <img
-                                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
-                                alt="avatar" class="d-flex align-self-center me-3" width="60">
+                                src="{{ user.profile.profile_image.url }}"
+                                alt="avatar" class="d-flex align-self-center me-3" width="60" style="border-radius: 50%;">
 
                                 {% if user.profile.is_online %}
                                   <span class="online-status badge bg-success badge-dot p-2 border border-light rounded-circle">
