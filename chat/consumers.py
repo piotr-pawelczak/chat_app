@@ -49,7 +49,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'message': message,
                 'user': self.user.username,
-                'datetime': now.isoformat()
+                'datetime': now.isoformat(),
             }
         )
 
