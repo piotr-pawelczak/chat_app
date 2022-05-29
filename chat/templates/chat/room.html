@@ -22,7 +22,7 @@
                 <ul class="list-group list-group-flush list-unstyled mb-0" id="user-ul">
                   {% for user in users %}
                       <li class="p-2 border-bottom mb-0 user-li">
-                      <a href="{% url 'chat:room' username=user.username %}" class="d-flex justify-content-between user-list-link">
+                      <a href="{% url 'chat:room' username=user.username %}" class="d-flex justify-content-between user-list-link" id="user-link-{{ user.id }}">
                           <div class="d-flex flex-row">
                             <div class="user-list-image">
                               <img
@@ -41,7 +41,14 @@
                             </div>
                             <div class="pt-1 user-list-info">
                               <p class="fw-bold mb-0">{{ user.username }}</p>
-                              <p class="small text-muted mb-0">No messages</p>
+                                <span id="notification_{{ user.id }}">
+                                    {% if user.id in notifications_id %}
+                                        <span class="badge rounded-pill bg-success" id="notification_{{ user.id }}">New messages</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-secondary" id="notification_{{ user.id }}">No new messages</span>
+                                    {% endif %}
+                                </span>
+
                             </div>
                           </div>
                         </a>
@@ -156,6 +163,14 @@
             }
 
             $chat.scrollTop($chat[0].scrollHeight);
+
+            if (data.sender_id !== {{ request.user.id }}){
+                let notification_sender_id = '#notification_' + data.sender_id;
+                $(notification_sender_id).html(
+                    "<span class=\"badge rounded-pill bg-success\">New messages</span>"
+                );
+            }
+
         };
 
         chatSocket.onclose = function (e) {
@@ -173,9 +188,25 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
-                'message': message
+                'message': message,
+                'sender': {{ request.user.id }},
+                'receiver': {{ receiver_user.id }}
             }));
             messageInputDom.value = '';
         };
+
+        $(document).ready(function(){
+            const receiverId = JSON.parse(document.getElementById('json-username').textContent);
+            let notification_receiver_id = '#notification_' + receiverId;
+                $(notification_receiver_id).html(
+                    "<span class=\"badge rounded-pill bg-secondary\">No new messages</span>"
+                );
+
+            chatSocket.onopen = () => chatSocket.send(JSON.stringify({
+                'type': 'notification',
+                'from': {{ receiver_user.id }},
+                'to': {{ request.user.id }}
+            }));
+        });
     </script>
 {% endblock %}

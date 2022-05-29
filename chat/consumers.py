@@ -3,7 +3,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
 from chat.models import ChatMessage
 from channels.db import database_sync_to_async
-
+from chat.models import Notification
+from django.contrib.auth.models import User
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
@@ -36,35 +37,72 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        now = timezone.now()
 
-        await self.save_message(self.user.username, self.room_group_name, message)
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'user': self.user.username,
-                'datetime': now.isoformat(),
-            }
-        )
+        text_data_json = json.loads(text_data)
+
+        if text_data_json.get('type') == 'notification':
+            sender_id = text_data_json['from']
+            receiver_id = text_data_json['to']
+            await self.read_notification(sender_id, receiver_id)
+        else:
+            message = text_data_json['message']
+            now = timezone.now()
+
+            sender_id = text_data_json['sender']
+            receiver_id = text_data_json['receiver']
+
+            await self.save_message(self.user.username, self.room_group_name, message)
+            await self.save_notification(sender_id, receiver_id)
+            # Send message to room group
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'user': self.user.username,
+                    'datetime': now.isoformat(),
+                    'sender_id': sender_id,
+                    'receiver_id': receiver_id
+                }
+            )
 
     # Receive message from room group
     async def chat_message(self, event):
+
         message = event['message']
         user = event['user']
         datetime = event['datetime']
+        receiver_id = event['receiver_id']
+        sender_id = event['sender_id']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
             'user': user,
             'datetime': datetime,
+            'sender_id': sender_id,
+            'receiver_id': receiver_id
         }))
 
     @database_sync_to_async
     def save_message(self, username, thread_name, content):
-        ChatMessage.objects.create(sender=username, content=content, thread_name=thread_name)
+        message = ChatMessage.objects.create(sender=username, content=content, thread_name=thread_name)
+        return message.id
+
+    @database_sync_to_async
+    def save_notification(self, sender, receiver):
+
+        if Notification.objects.filter(sender_id=sender, receiver_id=receiver).exists():
+            notification = Notification.objects.get(sender_id=sender, receiver_id=receiver)
+            notification.seen = False
+            notification.save()
+        else:
+            notification = Notification.objects.create(sender_id=sender, receiver_id=receiver)
+        return notification.id
+
+    @database_sync_to_async
+    def read_notification(self, sender, receiver):
+        if Notification.objects.filter(sender_id=sender, receiver_id=receiver).exists():
+            notification = Notification.objects.get(sender_id=sender, receiver_id=receiver)
+            notification.seen = True
+            notification.save()
