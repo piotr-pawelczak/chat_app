@@ -135,6 +135,7 @@
         const chatSocket = new WebSocket(url);
 
         chatSocket.onmessage = function (e) {
+            console.log(e.data);
             const data = JSON.parse(e.data);
             const dateOptions = {hour: 'numeric', minute: 'numeric', hour12: false};
             const datetime = new Date(data.datetime).toLocaleString('pl', dateOptions);
@@ -170,7 +171,6 @@
                     "<span class=\"badge rounded-pill bg-success\">New messages</span>"
                 );
             }
-
         };
 
         chatSocket.onclose = function (e) {

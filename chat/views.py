@@ -7,7 +7,12 @@ from chat.models import ChatMessage, Notification
 @login_required
 def index_view(request):
     users = User.objects.exclude(username=request.user.username)
-    context = {"users": users}
+
+    user = request.user
+    notifications = Notification.objects.filter(receiver_id=user.id, seen=False)
+    notifications_sender_id = [n.sender_id for n in notifications]
+
+    context = {"users": users, "notifications_id": notifications_sender_id}
     return render(request, "chat/index.html", context)
 
 
