@@ -65,7 +65,7 @@
             <div class="card mt-3" id="chat2">
                 <div class="card-header d-flex align-items-center p-3">
                     <img src="{{ receiver_user.profile.profile_image.url }}" alt="avatar" class="d-flex" width="45" style="border-radius: 50%;">
-                    <h5 class="mb-0" style="margin-left: 20px;">{{ receiver_user.username }}</h5>
+                    <a href="{% url 'users:profile' receiver_user.username %}" class="profile-link"><h5 class="mb-0" style="margin-left: 20px;">{{ receiver_user.username }}</h5></a>
                     {% if receiver_user.profile.is_online %}
                         <span class="badge bg-success badge-dot p-2 border border-light rounded-circle" style="margin-left: 10px;">
                             <span class="visually-hidden">Status</span>
@@ -80,7 +80,7 @@
                      style="position: relative; height: 400px">
                     <!-- PLACE FOR MESSAGES -->
                     {% for message in chat_messages %}
-                        {% if message.sender == request.user.username %}
+                        {% if message.sender.username == request.user.username %}
                             <div class="d-flex flex-row justify-content-end">
                                 <div>
                                     <p class="small p-2 ms-3 mb-1 rounded-3 bg-primary text-white" style="margin-right: 10px; margin-top: 5px;">{{ message }}</p>

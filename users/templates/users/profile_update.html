@@ -1,0 +1,15 @@
+{% extends "chat/base.html" %}
+{% load crispy_forms_filters %}
+
+{% block title %}Edit profile{% endblock %}
+
+{% block content %}
+    <h1 class="mt-3"> Edit your profile</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ user_form|crispy }}
+        {{ profile_form|crispy }}
+        <input type="submit" class="btn btn-success mt-3">
+    </form>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from chat.models import ChatMessage, Notification
 
@@ -18,6 +18,10 @@ def index_view(request):
 
 @login_required
 def room(request, username):
+
+    if request.user.username == username:
+        return redirect('chat:index')
+
     receiver_user = User.objects.get(username=username)
     users = User.objects.exclude(username=request.user.username)
 

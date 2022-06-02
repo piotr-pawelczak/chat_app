@@ -52,7 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             receiver_id = text_data_json['receiver']
 
             await self.save_message(self.user.username, self.room_group_name, message)
-            await self.save_notification(sender_id, receiver_id)
+            await self.send_notification(sender_id, receiver_id)
             # Send message to room group
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -86,23 +86,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, username, thread_name, content):
-        message = ChatMessage.objects.create(sender=username, content=content, thread_name=thread_name)
-        return message.id
+        ChatMessage.create(username, content, thread_name)
 
     @database_sync_to_async
-    def save_notification(self, sender, receiver):
-
+    def send_notification(self, sender, receiver):
         if Notification.objects.filter(sender_id=sender, receiver_id=receiver).exists():
-            notification = Notification.objects.get(sender_id=sender, receiver_id=receiver)
-            notification.seen = False
-            notification.save()
+            Notification.mark_as_not_seen(sender, receiver)
         else:
-            notification = Notification.objects.create(sender_id=sender, receiver_id=receiver)
-        return notification.id
+            Notification.create(sender, receiver)
 
     @database_sync_to_async
     def read_notification(self, sender, receiver):
-        if Notification.objects.filter(sender_id=sender, receiver_id=receiver).exists():
-            notification = Notification.objects.get(sender_id=sender, receiver_id=receiver)
-            notification.seen = True
-            notification.save()
+        Notification.mark_as_seen(sender, receiver)

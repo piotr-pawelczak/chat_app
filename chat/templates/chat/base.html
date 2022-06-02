@@ -36,7 +36,7 @@
         <div class="collapse navbar-collapse" id="collapsibleNavbar">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Rooms</a>
+                    <a class="nav-link" href="{% url "users:profile" request.user.username %}">Your profile</a>
                 </li>
             </ul>
             <ul class="d-flex ml-0 navbar-nav">
